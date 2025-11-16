@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <title>3D Stickman Animation Studio</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <base href="./">
+
+    <script type="importmap">
+    {
+      "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+        "gsap": "https://cdn.jsdelivr.net/npm/gsap@3.12.5/index.js"
+      }
+    }
+    </script>
+
+    <link rel="stylesheet" href="./style.css" />
+</head>
+<body>
+    <div id="scene"></div> 
+    
+    <div id="ui-container">
+        <h1>3D Stickman Studio</h1>
+        <input type="text" id="promptInput" placeholder="e.g., walk, then run, then fight, then sit">
+        <button id="runPrompt">Animate</button>
+    </div>
+
+    <script type="module" src="./main.js"></script>
+</body>
+</html>
