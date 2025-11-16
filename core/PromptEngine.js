@@ -20,6 +20,7 @@ export class PromptEngine {
       }
 
       for (const kf of motion.keyframes) {
+        // Now includes root_movement
         const numericPose = this.namedPoseToNumeric(kf.pose);
         timeline.push({ time: timeCursor + kf.time, pose: numericPose });
       }
@@ -29,30 +30,31 @@ export class PromptEngine {
     return timeline;
   }
 
-  // Uses CALIBRATED BONE NAMES for motion definition
+  // 🌟 FIX: Updated poses for realistic forward movement and stronger rotations
   namedPoseToNumeric(named) {
+    // Rotation values are stronger and the step/swing are synchronized.
+    // The Z-axis rotation creates the slight forward/backward sway.
     const map = {
-      // WALK Poses - Targets upper-most segment (upperLeg and upperArm)
-      "step_left": { upperLeg_L: { x: -0.8 }, upperLeg_R: { x: 0.8 } },
-      "step_right": { upperLeg_L: { x: 0.8 }, upperLeg_R: { x: -0.8 } },
-      "swing_left": { upperArm_L: { x: -1.0 }, upperArm_R: { x: 1.0 } },
-      "swing_right": { upperArm_L: { x: 1.0 }, upperArm_R: { x: -1.0 } },
+      // WALK Poses (Slower, 1.2 radians is approx 70 degrees)
+      "step_left": { upperLeg_L: { x: 1.2 }, lowerLeg_L: { x: -0.8 }, upperLeg_R: { x: -0.6 } },
+      "step_right": { upperLeg_L: { x: -0.6 }, upperLeg_R: { x: 1.2 }, lowerLeg_R: { x: -0.8 } },
+      "swing_left": { upperArm_L: { x: 0.8 }, upperArm_R: { x: -0.8 } },
+      "swing_right": { upperArm_L: { x: -0.8 }, upperArm_R: { x: 0.8 } },
 
-      // RUN Poses
-      "run_left": { upperLeg_L: { x: -1.5 }, upperLeg_R: { x: 1.5 } },
-      "run_right": { upperLeg_L: { x: 1.5 }, upperLeg_R: { x: -1.5 } },
-      "swing_left_fast": { upperArm_L: { x: -1.5 }, upperArm_R: { x: 1.5 } },
-      "swing_right_fast": { upperArm_L: { x: 1.5 }, upperArm_R: { x: -1.5 } },
+      // RUN Poses (Faster, more aggressive movement)
+      "run_left": { upperLeg_L: { x: 1.8 }, lowerLeg_L: { x: -1.2 }, upperLeg_R: { x: -1.0 } },
+      "run_right": { upperLeg_L: { x: -1.0 }, upperLeg_R: { x: 1.8 }, lowerLeg_R: { x: -1.2 } },
+      "swing_left_fast": { upperArm_L: { x: 1.2 }, upperArm_R: { x: -1.2 } },
+      "swing_right_fast": { upperArm_L: { x: -1.2 }, upperArm_R: { x: 1.2 } },
 
-      // FIGHT Poses
-      "guard_up": { upperArm_L: { x: -0.5, y: 0.2 }, upperArm_R: { x: 0.5, y: -0.2 } },
-      "punch_left": { upperArm_L: { x: -2.0, z: -0.8 } }, 
-      "punch_right": { upperArm_R: { x: 2.0, z: 0.8 } },
-      
+      // ROOT MOTION: Applied to the main Group position (hip is the root bone)
+      "walk_root": { root_movement: { z: 0.05 } }, // Move 0.05 units forward per keyframe
+      "run_root": { root_movement: { z: 0.15 } }, // Move 0.15 units forward per keyframe
+
       "neutral": {}
     };
     
-    // Logic to merge all parts into a single numeric pose object
+    // Logic to merge all parts (limbs + root) into a single numeric pose object
     const numericPose = {};
     for (const part in named) {
       if (map[named[part]]) {
