@@ -1,4 +1,4 @@
-// core/PromptEngine.js (Modified)
+// core/PromptEngine.js
 import { MotionLibrary } from "./MotionLibrary.js"; 
 
 export class PromptEngine {
@@ -6,8 +6,31 @@ export class PromptEngine {
     this.motionLib = new MotionLibrary();
   }
 
-  // ... (parse function remains the same) ...
+  parse(prompt) {
+    const parts = prompt.split(/,|then|and then|;/i).map(s => s.trim()).filter(Boolean);
+    let timeline = [];
+    let timeCursor = 0;
 
+    for (const part of parts) {
+      const motion = this.motionLib.findMotion(part);
+      if (!motion) {
+        timeline.push({ time: timeCursor, pose: {} });
+        timeCursor += 0.8;
+        continue;
+      }
+
+      for (const kf of motion.keyframes) {
+        // Now includes root_movement
+        const numericPose = this.namedPoseToNumeric(kf.pose);
+        timeline.push({ time: timeCursor + kf.time, pose: numericPose });
+      }
+      timeCursor += motion.duration;
+    }
+
+    return timeline;
+  }
+
+  // 🌟 FIX: Updated poses for realistic forward movement and stronger rotations
   namedPoseToNumeric(named) {
     const map = {
       // WALK Poses (Slower, 1.2 radians is approx 70 degrees)
@@ -37,7 +60,7 @@ export class PromptEngine {
       "neutral": {}
     };
     
-    // ... (Logic to merge remains the same) ...
+    // Logic to merge all parts (limbs + root) into a single numeric pose object
     const numericPose = {};
     for (const part in named) {
       if (map[named[part]]) {
