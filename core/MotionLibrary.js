@@ -1,8 +1,9 @@
 // core/MotionLibrary.js
+// Library of pre-defined motions for stickman
+
 export class MotionLibrary {
 
     constructor() {
-
         this.motions = [
             // ---------------------------------------------
             //  WALK
@@ -12,9 +13,10 @@ export class MotionLibrary {
                 keywords: ["walk", "walking", "move forward"],
                 duration: 2.0,
                 keyframes: [
-                    { time: 0.0, pose: { legs: "step_left", arms: "swing_left" } },
-                    { time: 1.0, pose: { legs: "step_right", arms: "swing_right" } },
-                    { time: 2.0, pose: { legs: "neutral", arms: "neutral" } }
+                    // Keyframes now include limb rotations and root movement
+                    { time: 0.0, pose: { legs: "step_left", arms: "swing_right", root: "walk_root" } },
+                    { time: 1.0, pose: { legs: "step_right", arms: "swing_left", root: "walk_root" } },
+                    { time: 2.0, pose: { legs: "neutral", arms: "neutral", root: "walk_root" } }
                 ]
             },
 
@@ -26,14 +28,14 @@ export class MotionLibrary {
                 keywords: ["run", "running", "sprint"],
                 duration: 1.0, 
                 keyframes: [
-                    { time: 0.0, pose: { legs: "run_left", arms: "swing_left_fast" } },
-                    { time: 0.5, pose: { legs: "run_right", arms: "swing_right_fast" } },
-                    { time: 1.0, pose: { legs: "neutral", arms: "neutral" } }
+                    { time: 0.0, pose: { legs: "run_left", arms: "swing_right_fast", root: "run_root" } },
+                    { time: 0.5, pose: { legs: "run_right", arms: "swing_left_fast", root: "run_root" } },
+                    { time: 1.0, pose: { legs: "neutral", arms: "neutral", root: "run_root" } }
                 ]
             },
             
             // ---------------------------------------------
-            //  FIGHT
+            //  FIGHT (Stationary)
             // ---------------------------------------------
             {
                 name: "fight",
@@ -48,15 +50,16 @@ export class MotionLibrary {
             },
             
             // ---------------------------------------------
-            //  SIT
+            //  SIT (Stationary)
             // ---------------------------------------------
             {
                 name: "sit",
                 keywords: ["sit", "sits", "sitting"],
                 duration: 1.4,
                 keyframes: [
-                    { time: 0.0, pose: { upperLeg_L: { x: 0.5 }, upperLeg_R: { x: 0.5 } } }, // Bend
-                    { time: 1.4, pose: { upperLeg_L: { x: Math.PI / 2 }, upperLeg_R: { x: Math.PI / 2 } } } // Sit
+                    // Targeting the rotation of the upper leg only for simplicity
+                    { time: 0.0, pose: { upperLeg_L: { x: 0.5 }, upperLeg_R: { x: 0.5 } } },
+                    { time: 1.4, pose: { upperLeg_L: { x: Math.PI / 2 }, upperLeg_R: { x: Math.PI / 2 } } } 
                 ]
             }
         ];
