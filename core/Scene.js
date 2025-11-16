@@ -37,7 +37,7 @@ export class SceneManager {
         );
         
         // Isometric Position (Equal distance on X, Y, Z for 45/30 degree standard isometric)
-        this.camera.position.set(0, 0, -1); 
+        this.camera.position.set(0, -1, -1); 
         this.camera.lookAt(0, 1.0, 0); // Look at the stickman's hip (position 1.0)
         // --------------------------------------------------------
 
