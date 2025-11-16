@@ -13,10 +13,11 @@ export class MotionLibrary {
                 keywords: ["walk", "walking", "move forward"],
                 duration: 2.0,
                 keyframes: [
-                    // Keyframes now include limb rotations and root movement
-                    { time: 0.0, pose: { legs: "step_left", arms: "swing_right", root: "walk_root" } },
-                    { time: 1.0, pose: { legs: "step_right", arms: "swing_left", root: "walk_root" } },
-                    { time: 2.0, pose: { legs: "neutral", arms: "neutral", root: "walk_root" } }
+                    // 🌟 FIX: Apply head_upright during movement
+                    { time: 0.0, pose: { legs: "step_left", arms: "swing_right", root: "walk_root", head: "head_upright" } },
+                    { time: 1.0, pose: { legs: "step_right", arms: "swing_left", root: "walk_root", head: "head_upright" } },
+                    // Set back to neutral (default T-pose) when motion ends/loops
+                    { time: 2.0, pose: { legs: "neutral", arms: "neutral", root: "walk_root", head: "head_neutral" } } 
                 ]
             },
 
@@ -28,9 +29,10 @@ export class MotionLibrary {
                 keywords: ["run", "running", "sprint"],
                 duration: 1.0, 
                 keyframes: [
-                    { time: 0.0, pose: { legs: "run_left", arms: "swing_right_fast", root: "run_root" } },
-                    { time: 0.5, pose: { legs: "run_right", arms: "swing_left_fast", root: "run_root" } },
-                    { time: 1.0, pose: { legs: "neutral", arms: "neutral", root: "run_root" } }
+                    // 🌟 FIX: Apply head_upright during movement
+                    { time: 0.0, pose: { legs: "run_left", arms: "swing_right_fast", root: "run_root", head: "head_upright" } },
+                    { time: 0.5, pose: { legs: "run_right", arms: "swing_left_fast", root: "run_root", head: "head_upright" } },
+                    { time: 1.0, pose: { legs: "neutral", arms: "neutral", root: "run_root", head: "head_neutral" } }
                 ]
             },
             
