@@ -11,6 +11,9 @@ export class Animator {
         for(const boneName in RIG_DATA.SKELETON) {
             this.targets[boneName] = this.stickman.bones[boneName].rotation;
         }
+        
+        // 🌟 NEW: Target the position of the main THREE.Group for root motion
+        this.targets.root_movement = this.stickman.group.position; 
 
         this.timeline = gsap.timeline({ paused: true, repeat: -1 }); 
         this.playing = false;
@@ -31,28 +34,51 @@ export class Animator {
             const timePosition = prevKf.time;
             const duration = kf.time - prevKf.time;
             
-            const limbs = Object.keys(kf.pose);
+            const keys = Object.keys(kf.pose);
 
-            for (const boneName of limbs) {
-                if (this.targets[boneName]) {
-                    const rotation = kf.pose[boneName];
-                    const targetRotation = {};
-                    const initRot = RIG_DATA.INITIAL_ROTATIONS[boneName];
+            for (const key of keys) {
+                const isRootMotion = key === 'root_movement';
+                const target = this.targets[key];
 
-                    // Map rotation targets, including the static T-pose offsets
-                    if (rotation.x !== undefined) targetRotation.x = rotation.x + (initRot?.x || 0);
-                    if (rotation.y !== undefined) targetRotation.y = rotation.y + (initRot?.y || 0);
-                    if (rotation.z !== undefined) targetRotation.z = rotation.z + (initRot?.z || 0);
+                if (target) {
+                    const values = kf.pose[key];
+                    const targetValues = {};
 
-                    this.timeline.to(
-                        this.targets[boneName], 
-                        {
-                            ease: "power1.inOut", 
-                            duration: duration,
-                            ...targetRotation, 
-                        },
-                        timePosition 
-                    );
+                    if (isRootMotion) {
+                        // 🌟 ROOT MOTION: Animate Group Position (x, y, z)
+                        // Note: We use += for Z movement to continuously move forward
+                        if (values.x !== undefined) targetValues.x = target.x + (values.x || 0);
+                        if (values.y !== undefined) targetValues.y = target.y + (values.y || 0);
+                        if (values.z !== undefined) targetValues.z = target.z + (values.z || 0);
+                        
+                        this.timeline.to(
+                            target,
+                            {
+                                ease: "linear", // Root motion is usually linear for consistent speed
+                                duration: duration,
+                                ...targetValues,
+                            },
+                            timePosition
+                        );
+
+                    } else {
+                        // 🌟 LOCAL MOTION: Animate Bone Rotations (x, y, z)
+                        const initRot = RIG_DATA.INITIAL_ROTATIONS[key];
+                        
+                        if (values.x !== undefined) targetValues.x = values.x + (initRot?.x || 0);
+                        if (values.y !== undefined) targetValues.y = values.y + (initRot?.y || 0);
+                        if (values.z !== undefined) targetValues.z = values.z + (initRot?.z || 0);
+
+                        this.timeline.to(
+                            target, 
+                            {
+                                ease: "power1.inOut", 
+                                duration: duration,
+                                ...targetValues, 
+                            },
+                            timePosition 
+                        );
+                    }
                 }
             }
         }
