@@ -10,15 +10,15 @@ export class SceneManager {
         this.clock = null;
         this.THREE = THREE;
         
-        // 🌟 NEW: Camera rotation state variables
+        // Camera rotation state variables
         this.isDragging = false;
-        this.startMouseX = 0;
-        this.startMouseY = 0;
-        this.radius = 4.0; // Fixed distance from target (locked to stick extents)
+        this.startClientX = 0;
+        this.startClientY = 0;
+        this.radius = 4.0; // Fixed distance from target (ensures stickman is in view)
         this.target = new THREE.Vector3(0, 1.0, 0); // Stickman's center point (hip)
         this.phi = Math.PI / 3;    // Polar angle (vertical rotation, 0 is top) - Initial 60 deg
         this.theta = Math.PI * 0.25; // Azimuth angle (horizontal rotation) - Initial 45 deg
-        this.size = 3; // Orthographic size
+        this.size = 3; // Orthographic size (zoom level)
     }
 
     async init() {
@@ -34,6 +34,131 @@ export class SceneManager {
         const container = document.getElementById("scene");
         container.appendChild(this.renderer.domElement);
 
+        const light = new THREE.DirectionalLight(0xffffff, 1.2);
+        light.position.set(3, 5, 2);
+        this.scene.add(light);
+        
+        // Add ground plane for visual context
+        const groundGeo = new this.THREE.PlaneGeometry(100, 100);
+        const groundMat = new this.THREE.MeshBasicMaterial({ color: 0x333333, side: this.THREE.DoubleSide });
+        const ground = new this.THREE.Mesh(groundGeo, groundMat);
+        ground.rotation.x = -Math.PI / 2;
+        ground.position.y = -0.01;
+        this.scene.add(ground);
+
+        this.updateCameraPosition(); // Set initial camera position
+
+        // 🌟 TOUCH-ONLY EVENT LISTENERS
+        window.addEventListener("resize", () => this.onWindowResize());
+        
+        container.addEventListener('touchstart', (e) => this.onPointerDown(e), false);
+        container.addEventListener('touchmove', (e) => this.onPointerMove(e), false);
+        window.addEventListener('touchend', (e) => this.onPointerUp(e), false);
+        
+        this.animate();
+    }
+    
+    setupOrthographicCamera() {
+        const aspect = window.innerWidth / window.innerHeight;
+        
+        this.camera = new THREE.OrthographicCamera(
+            -this.size * aspect,
+            this.size * aspect,
+            this.size,
+            -this.size,
+            0.1,
+            100
+        );
+    }
+    
+    // Core function: Updates camera position based on Phi and Theta angles
+    updateCameraPosition() {
+        // 🌟 CONSTRAINT: Clamp phi (vertical angle) between 0.01 radians (close to straight down) 
+        // and Math.PI / 3 (60 degrees). This prevents camera flipping.
+        this.phi = Math.max(0.01, Math.min(Math.PI / 3, this.phi));
+        
+        // Convert spherical angles (phi, theta, radius) to Cartesian (x, y, z)
+        const x = this.radius * Math.sin(this.phi) * Math.cos(this.theta);
+        const y = this.radius * Math.cos(this.phi);
+        const z = this.radius * Math.sin(this.phi) * Math.sin(this.theta);
+
+        // Set the camera position relative to the target (stickman's center)
+        this.camera.position.set(
+            this.target.x + x, 
+            this.target.y + y, 
+            this.target.z + z
+        );
+        
+        // Always look at the stickman's center
+        this.camera.lookAt(this.target);
+        
+        this.camera.updateProjectionMatrix(); 
+    }
+    
+    onWindowResize() {
+        const newAspect = window.innerWidth / window.innerHeight;
+        const orthoCamera = this.camera;
+        
+        // Update frustum bounds for OrthographicCamera
+        orthoCamera.left = -this.size * newAspect;
+        orthoCamera.right = this.size * newAspect;
+        orthoCamera.top = this.size;
+        orthoCamera.bottom = -this.size;
+        
+        orthoCamera.updateProjectionMatrix();
+        this.renderer.setSize(window.innerWidth, window.innerHeight);
+    }
+    
+    // Pointer Down Handler (Start Drag)
+    onPointerDown(event) {
+        if (event.touches.length !== 1) return; // Only allow single-finger touch
+        
+        event.preventDefault();
+        this.isDragging = true;
+
+        this.startClientX = event.touches[0].clientX;
+        this.startClientY = event.touches[0].clientY;
+    }
+
+    // Pointer Move Handler (Update Angles)
+    onPointerMove(event) {
+        if (!this.isDragging || event.touches.length !== 1) return;
+        event.preventDefault();
+
+        const clientX = event.touches[0].clientX;
+        const clientY = event.touches[0].clientY;
+
+        const deltaX = clientX - this.startClientX;
+        const deltaY = clientY - this.startClientY;
+
+        // Rotation speed factor (adjust sensitivity)
+        const speed = 0.005; 
+
+        // 1. Horizontal Drag -> Vertical Axis Rotation (theta)
+        this.theta -= deltaX * speed; 
+        
+        // 2. Vertical Drag -> Vertical Tilt (phi)
+        // Dragging down (positive deltaY) should increase phi (tilt down towards 60 degrees).
+        // Dragging up (negative deltaY) should decrease phi (tilt up towards 0 degrees).
+        this.phi += deltaY * speed; 
+
+        this.startClientX = clientX;
+        this.startClientY = clientY;
+
+        this.updateCameraPosition();
+    }
+
+    // Pointer Up Handler (End Drag)
+    onPointerUp(event) {
+        this.isDragging = false;
+    }
+
+
+    animate() {
+        requestAnimationFrame(() => this.animate());
+        this.renderer.render(this.scene, this.camera);
+    }
+}
         const light = new THREE.DirectionalLight(0xffffff, 1.2);
         light.position.set(3, 5, 2);
         this.scene.add(light);
